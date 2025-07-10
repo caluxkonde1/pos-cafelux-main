@@ -162,7 +162,8 @@ CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(produ
 CREATE INDEX IF NOT EXISTS idx_product_favorites_user_id ON product_favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_raw_material_movements_raw_material_id ON raw_material_movements(raw_material_id);
 CREATE INDEX IF NOT EXISTS idx_production_logs_product_id ON production_logs(product_id);
-CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode) WHERE barcode IS NOT NULL;
+-- Note: Skip barcode index since column may not exist in all environments
+-- CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode) WHERE barcode IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku) WHERE sku IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON categories(parent_id) WHERE parent_id IS NOT NULL;
 
