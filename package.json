@@ -15,7 +15,9 @@
     "db:migrate:niagahoster": "echo \"Apply niagahoster-mysql-migration.sql to your Niagahoster database\"",
     "db:test:niagahoster": "node test-niagahoster-connection.js",
     "db:setup:niagahoster": "node setup-database-niagahoster.js",
-    "deploy:niagahoster": "npm run build && echo \"Upload dist/ to your Niagahoster hosting\""
+    "deploy:niagahoster": "npm run build && echo \"Upload dist/ to your Niagahoster hosting\"",
+    "setup:supabase": "node setup-supabase-local.js",
+    "test:connection": "node check-database-connection.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
