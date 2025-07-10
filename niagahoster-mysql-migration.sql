@@ -1,9 +1,11 @@
+=======
 -- 🚀 POS CafeLux - MySQL Migration for Niagahoster
 -- Execute this script in your Niagahoster cPanel > phpMyAdmin
+-- IMPORTANT: Select your database first before running this script
 
--- Create database (if not exists)
-CREATE DATABASE IF NOT EXISTS pos_cafelux CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE pos_cafelux;
+-- Note: Database should already be created via cPanel
+-- This script only creates tables and inserts data
+=======
 
 -- 1. Users table
 CREATE TABLE IF NOT EXISTS users (

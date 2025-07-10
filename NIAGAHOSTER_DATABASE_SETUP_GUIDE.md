@@ -45,15 +45,22 @@
 ### **Step 5: Import Database Schema**
 1. Klik **"phpMyAdmin"** di cPanel
 2. Login dengan kredensial database yang baru dibuat
-3. Pilih database `username_pos_cafelux`
+3. **PENTING**: Pilih database `username_pos_cafelux` dari dropdown kiri
 4. Klik tab **"Import"**
-5. Klik **"Choose File"** dan upload file: `niagahoster-mysql-migration.sql`
+5. Klik **"Choose File"** dan upload file: `niagahoster-mysql-migration-fixed.sql`
 6. Klik **"Go"** untuk execute import
 
 **✅ Expected Result:**
 ```
-Import has been successfully finished, 9 queries executed.
+Import has been successfully finished, 50+ queries executed.
+Tables created: 9
+Sample data inserted
 ```
+
+**⚠️ TROUBLESHOOTING:**
+- **Error #1044 Access denied**: Pastikan database sudah dipilih di dropdown kiri
+- **CREATE DATABASE error**: Skip error ini, gunakan database yang sudah dibuat via cPanel
+- **Permission denied**: Pastikan user memiliki ALL PRIVILEGES pada database
 
 ---
 
