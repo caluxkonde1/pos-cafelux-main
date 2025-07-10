@@ -4,11 +4,16 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "NODE_ENV=development NODE_OPTIONS='--no-deprecation' tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "dev:verbose": "NODE_ENV=development tsx server/index.ts",
+    "start:clean": "NODE_ENV=production NODE_OPTIONS='--no-deprecation' node dist/index.js",
+    "db:migrate:niagahoster": "echo \"Apply niagahoster-mysql-migration.sql to your Niagahoster database\"",
+    "db:test:niagahoster": "node test-niagahoster-connection.js",
+    "deploy:niagahoster": "npm run build && echo \"Upload dist/ to your Niagahoster hosting\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -58,6 +63,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
     "memorystore": "^1.6.7",
+    "mysql2": "^3.14.1",
     "next-themes": "^0.4.6",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
@@ -104,5 +110,12 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
+  },
+  "overrides": {
+    "punycode": "^2.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
