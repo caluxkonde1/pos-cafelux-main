@@ -1,11 +1,21 @@
 {
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
-  "framework": "vite",
-  "functions": {
-    "api/*.ts": {
-      "runtime": "nodejs18.x"
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  }
+  ]
 }
