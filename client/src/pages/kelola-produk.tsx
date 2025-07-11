@@ -86,7 +86,7 @@ export default function KelolaProductPage() {
       icon: <BarChart3 className="h-6 w-6" />,
       title: 'Atur Stok',
       description: 'Ubah, tambah, atau kurangi stok produk dengan cepat.',
-      onClick: () => window.location.href = '/stok',
+      onClick: () => window.location.href = '/atur-stok',
       isProFeature: false
     },
     {

@@ -118,6 +118,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update product stock (role-based access)
+  app.patch("/api/products/:id/stock", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { stok, userRole } = req.body;
+      
+      // Check role-based access
+      if (!userRole || (userRole !== 'pemilik' && userRole !== 'admin')) {
+        return res.status(403).json({ 
+          message: "Akses ditolak. Hanya pemilik dan admin yang dapat mengubah stok." 
+        });
+      }
+      
+      // Validate stock value
+      if (typeof stok !== 'number' || stok < 0) {
+        return res.status(400).json({ 
+          message: "Stok harus berupa angka positif." 
+        });
+      }
+      
+      const product = await storage.updateProduct(id, { stok });
+      
+      if (!product) {
+        return res.status(404).json({ message: "Produk tidak ditemukan" });
+      }
+      
+      res.json({ 
+        message: "Stok berhasil diperbarui",
+        product 
+      });
+    } catch (error) {
+      console.error("Error updating stock:", error);
+      res.status(500).json({ message: "Gagal mengupdate stok" });
+    }
+  });
+
   // Categories
   app.get("/api/categories", async (req, res) => {
     try {
@@ -125,6 +161,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: "Gagal mengambil data kategori" });
+    }
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const { nama, deskripsi, warna } = req.body;
+      
+      if (!nama) {
+        return res.status(400).json({ message: "Nama kategori wajib diisi" });
+      }
+
+      const newCategory = {
+        nama,
+        deskripsi: deskripsi || "",
+        warna: warna || "#ef4444",
+        sort_order: Date.now()
+      };
+
+      // For now, return mock success response
+      // In production, you would save to database
+      const category = {
+        id: Date.now(),
+        ...newCategory
+      };
+
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ message: "Gagal membuat kategori" });
     }
   });
 
@@ -385,6 +450,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting subscription plans:", error);
       res.status(500).json({ message: "Failed to get subscription plans" });
+    }
+  });
+
+  // Wallet Integration Routes
+  app.post("/api/wallet/integrate/:provider", async (req, res) => {
+    try {
+      const { provider } = req.params;
+      const { merchantId, callbackUrl } = req.body;
+
+      if (!['gopay', 'dana'].includes(provider)) {
+        return res.status(400).json({ message: "Provider tidak didukung" });
+      }
+
+      // Simulate wallet integration API call
+      const integrationData = {
+        gopay: {
+          integrationUrl: `https://api.gopay.co.id/merchant/integrate?merchant_id=${merchantId}&callback=${encodeURIComponent(callbackUrl)}`,
+          apiKey: "GOPAY_API_KEY_DEMO",
+          merchantCode: "QASIR_GP_001"
+        },
+        dana: {
+          integrationUrl: `https://api.dana.id/merchant/register?merchant_id=${merchantId}&callback=${encodeURIComponent(callbackUrl)}`,
+          apiKey: "DANA_API_KEY_DEMO", 
+          merchantCode: "QASIR_DN_001"
+        }
+      };
+
+      // In production, you would make actual API calls to GoPay/Dana
+      // For demo purposes, we return mock integration URLs
+      res.json({
+        success: true,
+        provider,
+        integrationUrl: integrationData[provider as keyof typeof integrationData].integrationUrl,
+        message: `Integrasi ${provider.toUpperCase()} berhasil dimulai`
+      });
+
+    } catch (error) {
+      console.error("Wallet integration error:", error);
+      res.status(500).json({ message: "Gagal mengintegrasikan wallet" });
+    }
+  });
+
+  app.post("/api/wallet/callback", async (req, res) => {
+    try {
+      const { provider, status, merchantId, accessToken } = req.body;
+
+      // Handle callback from wallet providers
+      if (status === 'success') {
+        // Store integration data in database
+        // In production, you would save this to your database
+        console.log(`${provider} integration successful for merchant ${merchantId}`);
+        
+        res.json({
+          success: true,
+          message: `Integrasi ${provider} berhasil diselesaikan`
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: `Integrasi ${provider} gagal`
+        });
+      }
+
+    } catch (error) {
+      console.error("Wallet callback error:", error);
+      res.status(500).json({ message: "Gagal memproses callback wallet" });
+    }
+  });
+
+  app.get("/api/wallet/balance/:provider", async (req, res) => {
+    try {
+      const { provider } = req.params;
+
+      // Mock wallet balance data
+      const balanceData = {
+        gopay: {
+          balance: 2500000,
+          currency: "IDR",
+          lastUpdated: new Date().toISOString()
+        },
+        dana: {
+          balance: 1750000,
+          currency: "IDR", 
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      res.json({
+        success: true,
+        provider,
+        data: balanceData[provider as keyof typeof balanceData] || { balance: 0, currency: "IDR" }
+      });
+
+    } catch (error) {
+      console.error("Get wallet balance error:", error);
+      res.status(500).json({ message: "Gagal mengambil saldo wallet" });
     }
   });
 

@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import Penjualan from "@/pages/penjualan";
 import Produk from "@/pages/produk";
+import KelolaProduk from "@/pages/kelola-produk";
+import AturStok from "@/pages/atur-stok";
 import Stok from "@/pages/stok";
 import Diskon from "@/pages/diskon";
 import Laporan from "@/pages/laporan";
@@ -29,7 +31,7 @@ function Router() {
       <EnhancedSidebar />
       <div className="flex-1 lg:ml-72">
         <Header />
-        <main className="p-6">
+        <main className="p-4 lg:p-6 pt-16 lg:pt-6 pb-24 lg:pb-6">
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/menunggu-pembayaran" component={MenungguPembayaran} />
@@ -39,6 +41,8 @@ function Router() {
             <Route path="/rekap-kas" component={RekapKas} />
             <Route path="/pengingat" component={Pengingat} />
             <Route path="/produk" component={Produk} />
+            <Route path="/kelola-produk" component={KelolaProduk} />
+            <Route path="/atur-stok" component={AturStok} />
             <Route path="/stok" component={Stok} />
             <Route path="/diskon" component={Diskon} />
             <Route path="/laporan" component={Laporan} />

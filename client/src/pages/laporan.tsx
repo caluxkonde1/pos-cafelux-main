@@ -289,11 +289,12 @@ export default function Laporan() {
 
       {/* Charts and Detailed Reports */}
       <Tabs defaultValue="sales" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sales">Penjualan</TabsTrigger>
-          <TabsTrigger value="products">Produk</TabsTrigger>
-          <TabsTrigger value="payments">Pembayaran</TabsTrigger>
-          <TabsTrigger value="customers">Pelanggan</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-5">
+          <TabsTrigger value="sales" className="text-xs lg:text-sm">Penjualan</TabsTrigger>
+          <TabsTrigger value="products" className="text-xs lg:text-sm">Produk</TabsTrigger>
+          <TabsTrigger value="payments" className="text-xs lg:text-sm">Pembayaran</TabsTrigger>
+          <TabsTrigger value="customers" className="text-xs lg:text-sm">Pelanggan</TabsTrigger>
+          <TabsTrigger value="profit" className="text-xs lg:text-sm">Keuntungan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sales" className="space-y-6">
@@ -498,6 +499,181 @@ export default function Laporan() {
                   <p className="text-sm text-purple-600">Rata-rata per Pelanggan</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="profit" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Analisis Keuntungan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="text-center p-6 bg-green-50 rounded-lg">
+                  <DollarSign className="mx-auto mb-2 text-green-600" size={32} />
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatCurrency(
+                      filteredTransactions.reduce((totalProfit, transaction) => {
+                        return totalProfit + transaction.items.reduce((itemProfit, item) => {
+                          const product = products.find(p => p.id === item.productId);
+                          if (product && product.hargaBeli) {
+                            const profit = (parseFloat(item.harga) - parseFloat(product.hargaBeli.toString())) * item.jumlah;
+                            return itemProfit + profit;
+                          }
+                          return itemProfit;
+                        }, 0);
+                      }, 0)
+                    )}
+                  </p>
+                  <p className="text-sm text-green-600">Total Keuntungan</p>
+                </div>
+                
+                <div className="text-center p-6 bg-blue-50 rounded-lg">
+                  <Package className="mx-auto mb-2 text-blue-600" size={32} />
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatCurrency(
+                      filteredTransactions.reduce((totalCost, transaction) => {
+                        return totalCost + transaction.items.reduce((itemCost, item) => {
+                          const product = products.find(p => p.id === item.productId);
+                          if (product && product.hargaBeli) {
+                            return itemCost + (parseFloat(product.hargaBeli.toString()) * item.jumlah);
+                          }
+                          return itemCost;
+                        }, 0);
+                      }, 0)
+                    )}
+                  </p>
+                  <p className="text-sm text-blue-600">Total Modal</p>
+                </div>
+                
+                <div className="text-center p-6 bg-purple-50 rounded-lg">
+                  <TrendingUp className="mx-auto mb-2 text-purple-600" size={32} />
+                  <p className="text-2xl font-bold text-purple-600">
+                    {(() => {
+                      const totalProfit = filteredTransactions.reduce((totalProfit, transaction) => {
+                        return totalProfit + transaction.items.reduce((itemProfit, item) => {
+                          const product = products.find(p => p.id === item.productId);
+                          if (product && product.hargaBeli) {
+                            const profit = (parseFloat(item.harga) - parseFloat(product.hargaBeli.toString())) * item.jumlah;
+                            return itemProfit + profit;
+                          }
+                          return itemProfit;
+                        }, 0);
+                      }, 0);
+                      const totalCost = filteredTransactions.reduce((totalCost, transaction) => {
+                        return totalCost + transaction.items.reduce((itemCost, item) => {
+                          const product = products.find(p => p.id === item.productId);
+                          if (product && product.hargaBeli) {
+                            return itemCost + (parseFloat(product.hargaBeli.toString()) * item.jumlah);
+                          }
+                          return itemCost;
+                        }, 0);
+                      }, 0);
+                      const margin = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+                      return `${margin.toFixed(1)}%`;
+                    })()}
+                  </p>
+                  <p className="text-sm text-purple-600">Margin Keuntungan</p>
+                </div>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produk</TableHead>
+                    <TableHead>Harga Modal</TableHead>
+                    <TableHead>Harga Jual</TableHead>
+                    <TableHead>Terjual</TableHead>
+                    <TableHead>Total Modal</TableHead>
+                    <TableHead>Total Pendapatan</TableHead>
+                    <TableHead>Keuntungan</TableHead>
+                    <TableHead>Margin</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(() => {
+                    const profitByProduct = new Map<number, {
+                      product: Product;
+                      quantitySold: number;
+                      totalCost: number;
+                      totalRevenue: number;
+                      profit: number;
+                    }>();
+
+                    filteredTransactions.forEach(transaction => {
+                      transaction.items.forEach(item => {
+                        const product = products.find(p => p.id === item.productId);
+                        if (product) {
+                          const existing = profitByProduct.get(item.productId) || {
+                            product,
+                            quantitySold: 0,
+                            totalCost: 0,
+                            totalRevenue: 0,
+                            profit: 0
+                          };
+                          
+                          existing.quantitySold += item.jumlah;
+                          existing.totalRevenue += parseFloat(item.subtotal);
+                          
+                          if (product.hargaBeli) {
+                            const itemCost = parseFloat(product.hargaBeli.toString()) * item.jumlah;
+                            const itemProfit = parseFloat(item.subtotal) - itemCost;
+                            existing.totalCost += itemCost;
+                            existing.profit += itemProfit;
+                          }
+                          
+                          profitByProduct.set(item.productId, existing);
+                        }
+                      });
+                    });
+
+                    const profitData = Array.from(profitByProduct.values())
+                      .filter(item => item.quantitySold > 0)
+                      .sort((a, b) => b.profit - a.profit);
+
+                    return profitData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8">
+                          <TrendingUp className="mx-auto mb-2" size={32} />
+                          <p className="text-qasir-text-light">Tidak ada data keuntungan</p>
+                          <p className="text-sm text-qasir-text-light mt-1">
+                            Pastikan produk memiliki harga modal yang sudah diatur
+                          </p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      profitData.map((item) => {
+                        const margin = item.totalCost > 0 ? (item.profit / item.totalCost) * 100 : 0;
+                        return (
+                          <TableRow key={item.product.id}>
+                            <TableCell className="font-medium">{item.product.nama}</TableCell>
+                            <TableCell>
+                              {item.product.hargaBeli 
+                                ? formatCurrency(item.product.hargaBeli) 
+                                : <span className="text-gray-400">-</span>
+                              }
+                            </TableCell>
+                            <TableCell>{formatCurrency(item.product.harga)}</TableCell>
+                            <TableCell>{item.quantitySold} unit</TableCell>
+                            <TableCell>{formatCurrency(item.totalCost)}</TableCell>
+                            <TableCell>{formatCurrency(item.totalRevenue)}</TableCell>
+                            <TableCell className={`font-semibold ${item.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatCurrency(item.profit)}
+                            </TableCell>
+                            <TableCell className={`font-semibold ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {margin.toFixed(1)}%
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    );
+                  })()}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

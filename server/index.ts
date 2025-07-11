@@ -40,8 +40,17 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database with seed data
-  await seedDatabase();
+  // Skip database seeding if USE_MOCK_DATA is true
+  if (process.env.USE_MOCK_DATA !== 'true') {
+    try {
+      await seedDatabase();
+    } catch (error) {
+      console.log('⚠️ Database seeding failed, continuing with mock data...');
+      console.log('🔧 Set USE_MOCK_DATA=true to skip database connection');
+    }
+  } else {
+    console.log('📦 Using mock data for development');
+  }
   
   const server = await registerRoutes(app);
   
@@ -72,6 +81,9 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`🚀 POS CafeLux Enhanced Product Management System`);
+    log(`📱 Server running on http://localhost:${port}`);
+    log(`💎 Pro Features: Opsi Tambahan, Bundel, Bahan Baku & Resep`);
+    log(`🔗 Kelola Produk: http://localhost:${port}/kelola-produk`);
   });
 })();

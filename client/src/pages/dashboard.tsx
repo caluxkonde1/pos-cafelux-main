@@ -17,19 +17,91 @@ import {
   BarChart3,
   Bell,
   Wallet,
-  HelpCircle
+  HelpCircle,
+  X
 } from "lucide-react";
 import { useDashboardStats, useTopProducts, useRecentTransactions } from "@/hooks/use-dashboard-stats";
 import POSModal from "@/components/pos-modal";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const [posModalOpen, setPosModalOpen] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
   
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: topProducts, isLoading: productsLoading } = useTopProducts();
   const { data: recentTransactions, isLoading: transactionsLoading } = useRecentTransactions();
+
+  // Handle wallet integration
+  const handleWalletIntegration = async (provider: 'gopay' | 'dana') => {
+    try {
+      const response = await fetch(`/api/wallet/integrate/${provider}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          merchantId: 'QASIR_MERCHANT_001',
+          callbackUrl: `${window.location.origin}/api/wallet/callback`
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to provider's integration page
+        window.open(data.integrationUrl, '_blank');
+      } else {
+        console.error('Failed to integrate wallet');
+      }
+    } catch (error) {
+      console.error('Error integrating wallet:', error);
+    }
+  };
+
+  const quickMenuItems = [
+    { 
+      label: "Kelola Produk", 
+      icon: Package, 
+      badge: "Baru", 
+      color: "text-blue-600",
+      href: "/produk",
+      action: null
+    },
+    { 
+      label: "Pegawai", 
+      icon: Users, 
+      badge: "Baru", 
+      color: "text-green-600",
+      href: "/pegawai",
+      action: null
+    },
+    { 
+      label: "Outlet", 
+      icon: Warehouse, 
+      badge: "Baru", 
+      color: "text-purple-600",
+      href: "/outlet",
+      action: null
+    },
+    { 
+      label: "Saldo Wallet", 
+      icon: Wallet, 
+      badge: "Pro", 
+      color: "text-orange-600",
+      href: null,
+      action: () => setWalletModalOpen(true)
+    },
+    { 
+      label: "Bantuan", 
+      icon: HelpCircle, 
+      badge: "Pro", 
+      color: "text-red-600",
+      href: "/bantuan",
+      action: null
+    },
+  ];
 
   const formatCurrency = (amount: string | number) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -135,23 +207,39 @@ export default function Dashboard() {
       {/* Quick Access Menu */}
       <div className="px-4 mb-6">
         <div className="grid grid-cols-5 gap-3">
-          {[
-            { label: "Kelola Produk", icon: Package, badge: "Baru", color: "text-blue-600" },
-            { label: "Pegawai", icon: Users, badge: "Baru", color: "text-green-600" },
-            { label: "Outlet", icon: Warehouse, badge: "Baru", color: "text-purple-600" },
-            { label: "Saldo Wallet", icon: Wallet, badge: "Pro", color: "text-orange-600" },
-            { label: "Bantuan", icon: HelpCircle, badge: "Pro", color: "text-red-600" },
-          ].map(({ label, icon: Icon, badge, color }) => (
-            <button key={label} className="flex flex-col items-center space-y-2 p-2 bg-white rounded-lg shadow-sm">
-              <div className="relative">
-                <Icon size={24} className={color} />
-                <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-1 text-[8px] font-bold leading-none text-white rounded-full ${badge === 'Baru' ? 'bg-blue-500' : 'bg-orange-500'}`}>
-                  {badge}
-                </span>
+          {quickMenuItems.map(({ label, icon: Icon, badge, color, href, action }) => {
+            const ButtonContent = (
+              <div className="flex flex-col items-center space-y-2 p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="relative">
+                  <Icon size={24} className={color} />
+                  <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center px-1 text-[8px] font-bold leading-none text-white rounded-full ${badge === 'Baru' ? 'bg-blue-500' : 'bg-orange-500'}`}>
+                    {badge}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-700 text-center leading-tight">{label}</span>
               </div>
-              <span className="text-xs text-gray-700 text-center leading-tight">{label}</span>
-            </button>
-          ))}
+            );
+
+            if (href) {
+              return (
+                <Link key={label} href={href}>
+                  {ButtonContent}
+                </Link>
+              );
+            } else if (action) {
+              return (
+                <button key={label} onClick={action}>
+                  {ButtonContent}
+                </button>
+              );
+            } else {
+              return (
+                <button key={label}>
+                  {ButtonContent}
+                </button>
+              );
+            }
+          })}
         </div>
       </div>
 
@@ -279,6 +367,85 @@ export default function Dashboard() {
 
       {/* POS Modal */}
       <POSModal open={posModalOpen} onOpenChange={setPosModalOpen} />
+
+      {/* Wallet Integration Modal */}
+      {walletModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Integrasi Saldo Wallet</h2>
+              <button 
+                onClick={() => setWalletModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Hubungkan akun GoPay atau Dana Syng untuk menerima pembayaran digital dan mengelola saldo wallet Anda.
+            </p>
+
+            <div className="space-y-4">
+              {/* GoPay Integration */}
+              <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">GP</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">GoPay</h3>
+                    <p className="text-sm text-gray-600">Terima pembayaran hingga Rp1 juta</p>
+                  </div>
+                  <Button 
+                    onClick={() => handleWalletIntegration('gopay')}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    Hubungkan
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dana Syng Integration */}
+              <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">DS</span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">Dana Syng</h3>
+                    <p className="text-sm text-gray-600">Sistem pembayaran digital terpercaya</p>
+                  </div>
+                  <Button 
+                    onClick={() => handleWalletIntegration('dana')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    Hubungkan
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-yellow-50 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center mt-0.5">
+                  <span className="text-white text-xs">!</span>
+                </div>
+                <div>
+                  <p className="text-sm text-yellow-800 font-medium">Informasi Penting</p>
+                  <p className="text-xs text-yellow-700 mt-1">
+                    Integrasi wallet memerlukan verifikasi bisnis. Proses verifikasi dapat memakan waktu 1-3 hari kerja.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
