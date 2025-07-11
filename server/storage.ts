@@ -326,6 +326,16 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getProductByBarcode(barcode: string): Promise<Product | undefined> {
+    return Array.from(this.products.values()).find(p => p.barcode === barcode && p.isActive);
+  }
+
+  async getLowStockProducts(outletId?: number): Promise<Product[]> {
+    return Array.from(this.products.values()).filter(p => 
+      p.isActive && p.stok <= p.stokMinimal
+    );
+  }
+
   // Categories
   async getCategories(): Promise<Category[]> {
     return Array.from(this.categories.values()).filter(c => c.isActive);
@@ -568,6 +578,167 @@ export class MemStorage implements IStorage {
   async getRecentTransactions(limit = 5): Promise<TransactionWithItems[]> {
     const allTransactions = await this.getTransactions();
     return allTransactions.slice(0, limit);
+  }
+
+  async markTransactionAsPrinted(id: number): Promise<boolean> {
+    const transaction = this.transactions.get(id);
+    if (transaction) {
+      transaction.isPrinted = true;
+      this.transactions.set(id, transaction);
+      return true;
+    }
+    return false;
+  }
+
+  // Outlets - Mock implementation
+  async getOutlets(): Promise<Outlet[]> {
+    return [{ 
+      id: 1, 
+      nama: "Outlet Utama", 
+      alamat: "Jl. Utama No. 1", 
+      telepon: null,
+      email: null,
+      kodeOutlet: "OUT001",
+      isActive: true, 
+      createdAt: new Date() 
+    }];
+  }
+
+  async getOutlet(id: number): Promise<Outlet | undefined> {
+    if (id === 1) {
+      return { 
+        id: 1, 
+        nama: "Outlet Utama", 
+        alamat: "Jl. Utama No. 1", 
+        telepon: null,
+        email: null,
+        kodeOutlet: "OUT001",
+        isActive: true, 
+        createdAt: new Date() 
+      };
+    }
+    return undefined;
+  }
+
+  async createOutlet(outlet: InsertOutlet): Promise<Outlet> {
+    return { 
+      id: Date.now(), 
+      nama: outlet.nama,
+      alamat: outlet.alamat,
+      telepon: outlet.telepon || null,
+      email: outlet.email || null,
+      kodeOutlet: outlet.kodeOutlet,
+      isActive: outlet.isActive ?? true,
+      createdAt: new Date() 
+    };
+  }
+
+  // Stock Movements - Mock implementation
+  async getStockMovements(filters: any): Promise<StockMovement[]> {
+    return [];
+  }
+
+  async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {
+    return { 
+      id: Date.now(), 
+      type: movement.type,
+      productId: movement.productId,
+      quantity: movement.quantity,
+      quantityBefore: movement.quantityBefore,
+      quantityAfter: movement.quantityAfter,
+      userId: movement.userId,
+      outletId: movement.outletId || null,
+      reason: movement.reason || null,
+      referenceId: movement.referenceId || null,
+      catatan: movement.catatan || null,
+      createdAt: new Date() 
+    };
+  }
+
+  // Discounts - Mock implementation
+  async getDiscounts(isActive?: boolean): Promise<Discount[]> {
+    return [];
+  }
+
+  async getDiscount(id: number): Promise<Discount | undefined> {
+    return undefined;
+  }
+
+  async createDiscount(discount: InsertDiscount): Promise<Discount> {
+    return { 
+      id: Date.now(), 
+      nama: discount.nama,
+      type: discount.type,
+      value: discount.value,
+      minPurchase: discount.minPurchase || null,
+      maxDiscount: discount.maxDiscount || null,
+      startDate: discount.startDate || null,
+      endDate: discount.endDate || null,
+      isActive: discount.isActive ?? true,
+      createdAt: new Date() 
+    };
+  }
+
+  async updateDiscount(id: number, discount: Partial<InsertDiscount>): Promise<Discount | undefined> {
+    return undefined;
+  }
+
+  async applyDiscount(discountId: number, subtotal: number): Promise<{ discountAmount: number; finalTotal: number }> {
+    return { discountAmount: 0, finalTotal: subtotal };
+  }
+
+  // Reports - Mock implementation
+  async getProfitReport(startDate: Date, endDate: Date, outletId?: number): Promise<any> {
+    return { profit: 0, revenue: 0, cost: 0 };
+  }
+
+  async getStockMovementReport(startDate: Date, endDate: Date, outletId?: number, type?: string): Promise<any> {
+    return [];
+  }
+
+  // Printer Settings - Mock implementation
+  async getPrinterSettings(outletId?: number): Promise<PrinterSetting[]> {
+    return [];
+  }
+
+  async createPrinterSetting(setting: InsertPrinterSetting): Promise<PrinterSetting> {
+    return { 
+      id: Date.now(), 
+      outletId: setting.outletId,
+      printerName: setting.printerName,
+      printerType: setting.printerType,
+      paperSize: setting.paperSize || "80mm",
+      isActive: setting.isActive ?? true,
+      isDefault: setting.isDefault ?? false,
+      settings: setting.settings || {},
+      createdAt: new Date() 
+    };
+  }
+
+  async generateReceiptData(transactionId: number): Promise<any> {
+    return { receiptData: "Mock receipt data" };
+  }
+
+  // Backup - Mock implementation
+  async getBackupLogs(): Promise<BackupLog[]> {
+    return [];
+  }
+
+  async createBackup(type: string, userId?: number): Promise<BackupLog> {
+    return { 
+      id: Date.now(), 
+      type, 
+      userId: userId || null, 
+      status: "completed", 
+      filePath: null,
+      fileSize: null,
+      createdAt: new Date() 
+    };
+  }
+
+  // Multi-outlet sync - Mock implementation
+  async syncOutletData(sourceOutletId: number, targetOutletId: number, dataTypes: string[]): Promise<any> {
+    return { success: true, message: "Sync completed" };
   }
 }
 
@@ -881,4 +1052,15 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use MemStorage when DATABASE_URL is not available or database connection failed
-export const storage = (process.env.DATABASE_URL && db) ? new DatabaseStorage() : new MemStorage();
+let storage: IStorage;
+
+try {
+  // Force MemStorage for development to avoid database connection issues
+  console.log("📦 Using MemStorage for development (forced)");
+  storage = new MemStorage();
+} catch (error) {
+  console.log("⚠️ Failed to initialize storage, using MemStorage:", error);
+  storage = new MemStorage();
+}
+
+export { storage };

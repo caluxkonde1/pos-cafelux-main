@@ -179,13 +179,13 @@ export default function Produk() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3">
+    <div className="bg-gray-50 min-h-full">
+      {/* Mobile Back Button - Only show on mobile, positioned below main header */}
+      <div className="lg:hidden bg-white border-b px-4 py-2 flex items-center gap-3">
         <Button variant="ghost" size="sm" className="p-2" onClick={handleBackClick}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Produk</h1>
+        <span className="text-sm text-gray-600">Kembali</span>
       </div>
 
       {/* Tab Navigation */}
