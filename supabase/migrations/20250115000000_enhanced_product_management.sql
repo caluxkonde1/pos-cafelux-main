@@ -226,7 +226,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for production
+-- Create trigger for production (drop if exists first)
+DROP TRIGGER IF EXISTS trigger_update_stock_after_production ON production_logs;
 CREATE TRIGGER trigger_update_stock_after_production
   AFTER INSERT ON production_logs
   FOR EACH ROW
@@ -244,7 +245,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for raw material movements
+-- Create trigger for raw material movements (drop if exists first)
+DROP TRIGGER IF EXISTS trigger_update_raw_material_stock ON raw_material_movements;
 CREATE TRIGGER trigger_update_raw_material_stock
   AFTER INSERT ON raw_material_movements
   FOR EACH ROW
