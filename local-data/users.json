@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "admin123",
+    "email": "admin@qasir.com",
+    "nama": "Admin Toko",
+    "role": "admin",
+    "outletId": null,
+    "subscriptionPlan": "pro_plus",
+    "subscriptionStatus": "active",
+    "subscriptionExpiresAt": null,
+    "permissions": {},
+    "lastLogin": null,
+    "isActive": true,
+    "createdAt": "2025-07-12T07:25:45.114Z"
+  }
+]

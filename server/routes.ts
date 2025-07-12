@@ -176,15 +176,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nama,
         deskripsi: deskripsi || "",
         warna: warna || "#ef4444",
-        sort_order: Date.now()
+        sort_order: Date.now(),
+        isActive: true
       };
 
-      // For now, return mock success response
-      // In production, you would save to database
-      const category = {
-        id: Date.now(),
-        ...newCategory
-      };
+      // Save to database using storage
+      const category = await storage.createCategory(newCategory);
 
       res.status(201).json(category);
     } catch (error) {
@@ -319,6 +316,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Data tidak valid", errors: error.errors });
       }
       res.status(500).json({ message: "Gagal membuat transaksi" });
+    }
+  });
+
+  // Transaction export
+  app.get("/api/transactions/export", async (req, res) => {
+    try {
+      const { startDate, endDate, status } = req.query;
+      
+      let transactions;
+      if (startDate && endDate) {
+        transactions = await storage.getTransactionsByDateRange(
+          new Date(startDate as string),
+          new Date(endDate as string)
+        );
+      } else {
+        transactions = await storage.getTransactions();
+      }
+
+      if (status && status !== 'all') {
+        transactions = transactions.filter(t => t.status === status);
+      }
+
+      // Create CSV content
+      const csvHeader = 'Nomor Transaksi,Tanggal,Kasir,Pelanggan,Metode Pembayaran,Subtotal,Pajak,Diskon,Total,Status\n';
+      const csvRows = transactions.map(t => {
+        const date = new Date(t.createdAt).toLocaleDateString('id-ID');
+        const customer = t.customer?.nama || 'Umum';
+        return `${t.nomorTransaksi},${date},${t.kasir.nama},${customer},${t.metodePembayaran},${t.subtotal},${t.pajak},${t.diskon},${t.total},${t.status}`;
+      }).join('\n');
+
+      const csvContent = csvHeader + csvRows;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=transactions.csv');
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Export error:", error);
+      res.status(500).json({ message: "Gagal mengexport transaksi" });
+    }
+  });
+
+  // Transaction print
+  app.post("/api/transactions/:id/print", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.markTransactionAsPrinted(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Transaksi tidak ditemukan" });
+      }
+      
+      res.json({ message: "Transaksi berhasil ditandai sebagai tercetak" });
+    } catch (error) {
+      console.error("Print error:", error);
+      res.status(500).json({ message: "Gagal mencetak transaksi" });
+    }
+  });
+
+  // Cash Entries
+  app.get("/api/cash-entries", async (req, res) => {
+    try {
+      const { date } = req.query;
+      const entries = await storage.getCashEntries(date as string);
+      res.json(entries);
+    } catch (error) {
+      console.error("Get cash entries error:", error);
+      res.status(500).json({ message: "Gagal mengambil data kas" });
+    }
+  });
+
+  app.post("/api/cash-entries", async (req, res) => {
+    try {
+      const { jenis, kategori, deskripsi, jumlah, referensi } = req.body;
+      
+      const entry = await storage.addCashEntry({
+        jenis,
+        kategori,
+        deskripsi,
+        jumlah: parseFloat(jumlah),
+        referensi,
+        kasir: "Current User" // TODO: Get from session
+      });
+      
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Add cash entry error:", error);
+      res.status(500).json({ message: "Gagal menambah transaksi kas" });
+    }
+  });
+
+  app.get("/api/cash-entries/export", async (req, res) => {
+    try {
+      const { date } = req.query;
+      const entries = await storage.getCashEntries(date as string);
+
+      // Create CSV content
+      const csvHeader = 'Tanggal,Waktu,Jenis,Kategori,Deskripsi,Jumlah,Saldo,Kasir,Referensi\n';
+      const csvRows = entries.map(entry => {
+        const tanggal = new Date(entry.createdAt).toLocaleDateString('id-ID');
+        const waktu = new Date(entry.createdAt).toLocaleTimeString('id-ID');
+        return `${tanggal},${waktu},${entry.jenis},${entry.kategori},"${entry.deskripsi}",${entry.jumlah},${entry.saldo},${entry.kasir},${entry.referensi || ''}`;
+      }).join('\n');
+
+      const csvContent = csvHeader + csvRows;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=cash-entries.csv');
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Export cash entries error:", error);
+      res.status(500).json({ message: "Gagal mengexport data kas" });
     }
   });
 

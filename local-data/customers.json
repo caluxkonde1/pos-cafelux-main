@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "nama": "Andi Susanto",
+    "email": "andi@email.com",
+    "telepon": "08123456789",
+    "alamat": "Jl. Merdeka No. 1",
+    "totalPembelian": "0",
+    "jumlahTransaksi": 0,
+    "createdAt": "2025-07-12T07:25:45.114Z"
+  },
+  {
+    "id": 2,
+    "nama": "Siti Nurhaliza",
+    "email": "siti@email.com",
+    "telepon": "08234567890",
+    "alamat": "Jl. Sudirman No. 2",
+    "totalPembelian": "0",
+    "jumlahTransaksi": 0,
+    "createdAt": "2025-07-12T07:25:45.114Z"
+  },
+  {
+    "id": 3,
+    "nama": "Budi Prasetyo",
+    "email": "budi@email.com",
+    "telepon": "08345678901",
+    "alamat": "Jl. Gatot Subroto No. 3",
+    "totalPembelian": "0",
+    "jumlahTransaksi": 0,
+    "createdAt": "2025-07-12T07:25:45.114Z"
+  }
+]

@@ -1,0 +1,212 @@
+{
+  "database": {
+    "passed": 6,
+    "failed": 0,
+    "tests": [
+      {
+        "name": "Categories CREATE operation",
+        "status": "PASS",
+        "details": "Created category ID: 6",
+        "timestamp": "2025-07-12T11:26:20.038Z"
+      },
+      {
+        "name": "Categories READ operation",
+        "status": "PASS",
+        "details": "Retrieved: Test Category",
+        "timestamp": "2025-07-12T11:26:20.110Z"
+      },
+      {
+        "name": "Categories UPDATE operation",
+        "status": "PASS",
+        "details": "Updated to: Updated Test Category",
+        "timestamp": "2025-07-12T11:26:20.190Z"
+      },
+      {
+        "name": "Categories DELETE operation",
+        "status": "PASS",
+        "details": "Successfully deleted test category",
+        "timestamp": "2025-07-12T11:26:20.269Z"
+      },
+      {
+        "name": "Products SELECT operation",
+        "status": "PASS",
+        "details": "Retrieved 5 products",
+        "timestamp": "2025-07-12T11:26:20.462Z"
+      },
+      {
+        "name": "Transactions SELECT operation",
+        "status": "PASS",
+        "details": "Retrieved 0 transactions",
+        "timestamp": "2025-07-12T11:26:20.528Z"
+      }
+    ]
+  },
+  "api": {
+    "passed": 0,
+    "failed": 7,
+    "tests": [
+      {
+        "name": "Get Products (GET /api/products)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.531Z"
+      },
+      {
+        "name": "Get Categories (GET /api/categories)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.533Z"
+      },
+      {
+        "name": "Get Transactions (GET /api/transactions)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.535Z"
+      },
+      {
+        "name": "Get Customers (GET /api/customers)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.537Z"
+      },
+      {
+        "name": "Get Dashboard Stats (GET /api/dashboard/stats)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.539Z"
+      },
+      {
+        "name": "Get Low Stock Products (GET /api/products/low-stock)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.540Z"
+      },
+      {
+        "name": "Get Reminders (GET /api/reminders)",
+        "status": "FAIL",
+        "details": "Connection error: fetch failed",
+        "timestamp": "2025-07-12T11:26:20.542Z"
+      }
+    ]
+  },
+  "schema": {
+    "passed": 8,
+    "failed": 4,
+    "tests": [
+      {
+        "name": "Table users exists",
+        "status": "PASS",
+        "details": "Accessible with 1 sample records",
+        "timestamp": "2025-07-12T11:26:19.105Z"
+      },
+      {
+        "name": "Table products exists",
+        "status": "PASS",
+        "details": "Accessible with 1 sample records",
+        "timestamp": "2025-07-12T11:26:19.173Z"
+      },
+      {
+        "name": "Table categories exists",
+        "status": "PASS",
+        "details": "Accessible with 1 sample records",
+        "timestamp": "2025-07-12T11:26:19.262Z"
+      },
+      {
+        "name": "Table customers exists",
+        "status": "PASS",
+        "details": "Accessible with 1 sample records",
+        "timestamp": "2025-07-12T11:26:19.330Z"
+      },
+      {
+        "name": "Table transactions exists",
+        "status": "PASS",
+        "details": "Accessible with 0 sample records",
+        "timestamp": "2025-07-12T11:26:19.407Z"
+      },
+      {
+        "name": "Table transaction_items exists",
+        "status": "PASS",
+        "details": "Accessible with 0 sample records",
+        "timestamp": "2025-07-12T11:26:19.489Z"
+      },
+      {
+        "name": "Table dashboard_stats exists",
+        "status": "FAIL",
+        "details": "relation \"public.dashboard_stats\" does not exist",
+        "timestamp": "2025-07-12T11:26:19.566Z"
+      },
+      {
+        "name": "Table subscription_plans exists",
+        "status": "FAIL",
+        "details": "relation \"public.subscription_plans\" does not exist",
+        "timestamp": "2025-07-12T11:26:19.651Z"
+      },
+      {
+        "name": "Table features exists",
+        "status": "FAIL",
+        "details": "relation \"public.features\" does not exist",
+        "timestamp": "2025-07-12T11:26:19.727Z"
+      },
+      {
+        "name": "Categories table structure",
+        "status": "PASS",
+        "details": "Required fields: id, nama, deskripsi",
+        "timestamp": "2025-07-12T11:26:19.797Z"
+      },
+      {
+        "name": "Products table structure",
+        "status": "FAIL",
+        "details": "column products.kategori does not exist",
+        "timestamp": "2025-07-12T11:26:19.871Z"
+      },
+      {
+        "name": "Users table structure",
+        "status": "PASS",
+        "details": "Authentication fields present",
+        "timestamp": "2025-07-12T11:26:19.952Z"
+      }
+    ]
+  },
+  "integration": {
+    "passed": 5,
+    "failed": 1,
+    "tests": [
+      {
+        "name": "Category-Product Relationship",
+        "status": "FAIL",
+        "details": "column products.kategori does not exist",
+        "timestamp": "2025-07-12T11:26:20.701Z"
+      },
+      {
+        "name": "Transaction-Items Relationship",
+        "status": "PASS",
+        "details": "No transactions found (expected for new setup)",
+        "timestamp": "2025-07-12T11:26:20.768Z"
+      },
+      {
+        "name": "User Authentication Structure",
+        "status": "PASS",
+        "details": "Found 4 users, 4 active",
+        "timestamp": "2025-07-12T11:26:20.843Z"
+      },
+      {
+        "name": "Empty query result handling",
+        "status": "PASS",
+        "details": "Query returned 0 results (expected: 0)",
+        "timestamp": "2025-07-12T11:26:20.924Z"
+      },
+      {
+        "name": "Invalid data insertion handling",
+        "status": "PASS",
+        "details": "Correctly rejected invalid data: null value in column \"nama\" of relation \"categories\" violates not-null constraint",
+        "timestamp": "2025-07-12T11:26:21.006Z"
+      },
+      {
+        "name": "Large data query handling",
+        "status": "PASS",
+        "details": "Successfully queried up to 1000 records, got 5",
+        "timestamp": "2025-07-12T11:26:21.083Z"
+      }
+    ]
+  }
+}

@@ -3,5 +3,6 @@
   "deno.importMap": "./supabase/functions/import_map.json",
   "deno.lint": true,
   "deno.unstable": true,
-  "typescript.preferences.importModuleSpecifier": "relative"
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "terminal.integrated.defaultProfile.windows": null
 }

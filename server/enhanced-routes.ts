@@ -328,5 +328,160 @@ export function registerEnhancedRoutes(app: Express) {
     }
   });
   
+  // ============ ENHANCED PRODUCT ROUTES ============
+  
+  // Get all brands
+  app.get("/api/brands", async (req, res) => {
+    try {
+      // Mock brands data for now
+      const brands = [
+        { id: 1, nama: "Unilever", deskripsi: "Produk konsumen multinasional" },
+        { id: 2, nama: "Nestle", deskripsi: "Makanan dan minuman global" },
+        { id: 3, nama: "Indofood", deskripsi: "Produk makanan Indonesia" },
+        { id: 4, nama: "Wings", deskripsi: "Produk rumah tangga Indonesia" },
+        { id: 5, nama: "Mayora", deskripsi: "Makanan ringan dan minuman" },
+      ];
+      res.json(brands);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      res.status(500).json({ message: "Failed to fetch brands" });
+    }
+  });
+
+  // Enhanced product creation with variants and images
+  app.post("/api/products/enhanced", async (req, res) => {
+    try {
+      const {
+        nama,
+        kode,
+        barcode,
+        kategoriId,
+        kategori,
+        harga,
+        hargaBeli,
+        stok,
+        stokMinimal,
+        satuan,
+        deskripsi,
+        gambar,
+        pajak,
+        diskonMaksimal,
+        brandId,
+        isProdukFavorit,
+        variants,
+        images,
+        wholesalePrice,
+        wholesaleMinQty,
+      } = req.body;
+
+      if (!nama || !harga || !kategoriId) {
+        return res.status(400).json({ message: "Name, price, and category are required" });
+      }
+
+      // For now, create a regular product and store additional data as metadata
+      const productData = {
+        nama,
+        kode: kode || `PRD${Date.now()}`,
+        barcode,
+        kategoriId: parseInt(kategoriId),
+        kategori,
+        harga: harga.toString(),
+        hargaBeli: hargaBeli ? hargaBeli.toString() : undefined,
+        stok: parseInt(stok) || 0,
+        stokMinimal: parseInt(stokMinimal) || 5,
+        satuan: satuan || "pcs",
+        deskripsi,
+        gambar,
+        pajak: pajak ? pajak.toString() : "0",
+        diskonMaksimal: diskonMaksimal ? diskonMaksimal.toString() : "0",
+        isActive: true,
+      };
+
+      const product = await storage.createProduct(productData);
+
+      // Add enhanced metadata
+      const enhancedProduct = {
+        ...product,
+        brandId: brandId ? parseInt(brandId) : null,
+        isProdukFavorit: isProdukFavorit || false,
+        hasVariants: variants && variants.length > 0,
+        primaryImageUrl: gambar,
+        wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : null,
+        wholesaleMinQty: wholesaleMinQty ? parseInt(wholesaleMinQty) : 1,
+        variants: variants || [],
+        images: images || [],
+      };
+
+      res.status(201).json(enhancedProduct);
+    } catch (error) {
+      console.error("Error creating enhanced product:", error);
+      res.status(500).json({ message: "Failed to create product" });
+    }
+  });
+
+  // Fix reminders endpoint (JSON parsing error)
+  app.get("/api/reminders", async (req, res) => {
+    try {
+      // Mock reminders data for now
+      const reminders = [
+        {
+          id: 1,
+          judul: "Stok Roti Tawar Habis",
+          deskripsi: "Stok roti tawar sari roti tinggal 2 pcs",
+          tanggal: new Date().toISOString().split('T')[0],
+          waktu: "10:00",
+          kategori: "Stok",
+          prioritas: "Tinggi",
+          status: "aktif",
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 2,
+          judul: "Restock Susu Ultra",
+          deskripsi: "Perlu restock susu ultra 1L",
+          tanggal: new Date().toISOString().split('T')[0],
+          waktu: "14:00",
+          kategori: "Pembelian",
+          prioritas: "Sedang",
+          status: "aktif",
+          createdAt: new Date().toISOString()
+        }
+      ];
+      
+      res.json(reminders);
+    } catch (error) {
+      console.error("Error fetching reminders:", error);
+      res.status(500).json({ message: "Failed to fetch reminders" });
+    }
+  });
+
+  // Add reminder
+  app.post("/api/reminders", async (req, res) => {
+    try {
+      const { judul, deskripsi, tanggal, waktu, kategori, prioritas } = req.body;
+      
+      if (!judul || !tanggal || !waktu) {
+        return res.status(400).json({ message: "Judul, tanggal, dan waktu harus diisi" });
+      }
+
+      const newReminder = {
+        id: Date.now(),
+        judul,
+        deskripsi: deskripsi || "",
+        tanggal,
+        waktu,
+        kategori: kategori || "Umum",
+        prioritas: prioritas || "Sedang",
+        status: "aktif",
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json(newReminder);
+    } catch (error) {
+      console.error("Error creating reminder:", error);
+      res.status(500).json({ message: "Failed to create reminder" });
+    }
+  });
+
   console.log("✅ Enhanced routes registered successfully!");
 }

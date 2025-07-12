@@ -3,28 +3,30 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Search, Filter, ArrowLeft, Plus, Package, AlertTriangle, TrendingDown, Settings } from "lucide-react";
+import { Search, Filter, Plus, Package, AlertTriangle, TrendingDown, DollarSign, MoreVertical, Trash2, Edit } from "lucide-react";
 import { AddProductModal } from "../components/add-product-modal";
 import { AddCategoryModal } from "../components/add-category-modal";
 import { EditStockModal } from "../components/edit-stock-modal";
 import { EditProductModal } from "../components/edit-product-modal";
 import { usePermissions } from "../hooks/use-permissions";
 import { useProducts, useProductStats, useProductFilter } from "../hooks/use-products";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "../components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../components/ui/alert-dialog";
 
 // Mock data sebagai fallback
 const mockProducts = [
-  { id: 1, nama: "kuota", harga: 151000, stok: 0, kategori: "Produk", avatar: "Ku" },
-  { id: 2, nama: "cctv ezviz ip camera", harga: 625000, stok: 25, kategori: "Elektronik", avatar: "CE" },
-  { id: 3, nama: "colokan listrik / steker", harga: 25000, stok: 5, kategori: "Produk", avatar: "CL" },
-  { id: 4, nama: "jasa instalasi", harga: 125000, stok: 9994, kategori: "Produk", avatar: "JI" },
-  { id: 5, nama: "kabel lan", harga: 9000, stok: 0, kategori: "Produk", avatar: "KL" },
-  { id: 6, nama: "kabel listrik", harga: 15000, stok: 8, kategori: "Elektronik", avatar: "KL" },
-  { id: 7, nama: "Microsd sandisk extreme", harga: 350000, stok: 3, kategori: "Elektronik", avatar: "MS" },
-  { id: 8, nama: "Modem / router", harga: 650000, stok: 15, kategori: "Elektronik", avatar: "M/" },
+  { id: 1, nama: "Roti Tawar Sari Roti", harga: 8500, stok: 50, kategori: "Makanan", avatar: "RT", kode: "PRD-001" },
+  { id: 2, nama: "cctv ezviz ip camera", harga: 625000, stok: 25, kategori: "Elektronik", avatar: "CE", kode: "PRD-002" },
+  { id: 3, nama: "colokan listrik / steker", harga: 25000, stok: 5, kategori: "Produk", avatar: "CL", kode: "PRD-003" },
+  { id: 4, nama: "jasa instalasi", harga: 125000, stok: 9994, kategori: "Produk", avatar: "JI", kode: "PRD-004" },
+  { id: 5, nama: "kabel lan", harga: 9000, stok: 0, kategori: "Produk", avatar: "KL", kode: "PRD-005" },
+  { id: 6, nama: "kabel listrik", harga: 15000, stok: 8, kategori: "Elektronik", avatar: "KL", kode: "PRD-006" },
+  { id: 7, nama: "Microsd sandisk extreme", harga: 350000, stok: 3, kategori: "Elektronik", avatar: "MS", kode: "PRD-007" },
+  { id: 8, nama: "Router wifi", harga: 450000, stok: 12, kategori: "Elektronik", avatar: "RW", kode: "PRD-008" },
 ];
 
 const mockCategories = [
-  { id: 1, nama: "Produk", sort_order: 1, warna: "#ef4444", deskripsi: "" },
+  { id: 1, nama: "Makanan", sort_order: 1, warna: "#ef4444", deskripsi: "" },
   { id: 2, nama: "Elektronik", sort_order: 2, warna: "#3b82f6", deskripsi: "" },
   { id: 3, nama: "Minuman", sort_order: 3, warna: "#10b981", deskripsi: "" },
 ];
@@ -36,6 +38,7 @@ interface Product {
   stok: number;
   kategori: string;
   avatar?: string;
+  kode?: string;
 }
 
 interface Category {
@@ -64,7 +67,11 @@ export default function Produk() {
     updateStock,
     isUpdatingStock,
     updateProduct,
-    isUpdatingProduct
+    isUpdatingProduct,
+    addCategory,
+    isAddingCategory,
+    deleteProduct,
+    isDeletingProduct
   } = useProducts();
   
   // Use database data if available, otherwise fallback to mock data
@@ -107,9 +114,9 @@ export default function Produk() {
   const stockStats = useProductStats(products);
 
   const getStockStatus = (stok: number) => {
-    if (stok === 0) return { label: "Habis", color: "bg-red-500" };
-    if (stok <= 10) return { label: "Rendah", color: "bg-yellow-500" };
-    return { label: "Normal", color: "bg-green-500" };
+    if (stok === 0) return { label: "Habis", color: "bg-red-100 text-red-800" };
+    if (stok <= 10) return { label: "Rendah", color: "bg-yellow-100 text-yellow-800" };
+    return { label: "Normal", color: "bg-green-100 text-green-800" };
   };
 
   const handleUpdateStock = async (productId: number, newStock: number) => {
@@ -135,9 +142,18 @@ export default function Produk() {
     console.log("Add product:", newProduct);
   };
 
-  const handleAddCategory = (newCategory: Category) => {
-    // This will be handled by the AddCategoryModal component
-    console.log("Add category:", newCategory);
+  const handleAddCategory = async (newCategory: Category) => {
+    try {
+      await addCategory({
+        nama: newCategory.nama,
+        deskripsi: newCategory.deskripsi,
+        warna: newCategory.warna
+      });
+      // Categories will be automatically refreshed by the mutation
+    } catch (error: any) {
+      console.error("Failed to add category:", error);
+      alert(error.message || "Gagal menambahkan kategori");
+    }
   };
 
   const handleEditProduct = (product: Product) => {
@@ -156,8 +172,13 @@ export default function Produk() {
     }
   };
 
-  const handleBackClick = () => {
-    window.history.back();
+  const handleDeleteProduct = async (productId: number) => {
+    try {
+      await deleteProduct(productId);
+    } catch (error: any) {
+      alert(error.message || "Gagal menghapus produk");
+      throw error;
+    }
   };
 
   const handleFilterClick = () => {
@@ -174,25 +195,13 @@ export default function Produk() {
     setShowFilterModal(false);
   };
 
-  const handleUpgradeClick = () => {
-    window.location.href = '/berlangganan';
-  };
-
   return (
-    <div className="bg-gray-50 min-h-full">
-      {/* Mobile Back Button - Only show on mobile, positioned below main header */}
-      <div className="lg:hidden bg-white border-b px-4 py-2 flex items-center gap-3">
-        <Button variant="ghost" size="sm" className="p-2" onClick={handleBackClick}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <span className="text-sm text-gray-600">Kembali</span>
-      </div>
-
+    <div className="bg-gray-50 min-h-screen">
       {/* Tab Navigation */}
-      <div className="bg-white border-b">
+      <div className="bg-white">
         <div className="flex">
           <button
-            className={`flex-1 py-3 px-4 text-center border-b-2 font-medium ${
+            className={`flex-1 py-4 px-4 text-center border-b-2 font-medium transition-colors ${
               activeTab === "Produk" 
                 ? "border-red-500 text-red-500" 
                 : "border-transparent text-gray-500"
@@ -202,7 +211,7 @@ export default function Produk() {
             Produk
           </button>
           <button
-            className={`flex-1 py-3 px-4 text-center border-b-2 font-medium ${
+            className={`flex-1 py-4 px-4 text-center border-b-2 font-medium transition-colors ${
               activeTab === "Kategori" 
                 ? "border-red-500 text-red-500" 
                 : "border-transparent text-gray-500"
@@ -214,32 +223,20 @@ export default function Produk() {
         </div>
       </div>
 
-      {/* Pro Upgrade Banner */}
-      <div className="mx-4 mt-4 mb-4">
-        <div className="bg-green-100 border border-green-200 rounded-lg p-3 flex items-center justify-between cursor-pointer" onClick={handleUpgradeClick}>
-          <span className="text-green-800 text-sm font-medium">
-            Saatnya upgrade ke Qasir Pro
-          </span>
-          <Button variant="ghost" size="sm" className="p-1">
-            <ArrowLeft className="h-4 w-4 rotate-180" />
-          </Button>
-        </div>
-      </div>
-
       {/* Search Bar */}
-      <div className="px-4 mb-4">
-        <div className="flex gap-2">
+      <div className="px-4 mb-4 mt-4">
+        <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Cari Produk"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-gray-200"
+              className="pl-10 bg-white border-gray-200 rounded-xl h-12 text-sm"
             />
           </div>
-          <Button variant="outline" size="icon" className="shrink-0" onClick={handleFilterClick}>
-            <Filter className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="shrink-0 rounded-xl h-12 w-12 border-gray-200" onClick={handleFilterClick}>
+            <Filter className="h-4 w-4 text-gray-600" />
           </Button>
         </div>
       </div>
@@ -247,50 +244,63 @@ export default function Produk() {
       {/* Content based on active tab */}
       {activeTab === "Produk" ? (
         <>
-          {/* Stock Statistics */}
-          <div className="px-4 mb-4">
+          {/* Stock Statistics Cards */}
+          <div className="px-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Card className="bg-white rounded-xl shadow-sm border-0">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Package className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Total Produk</p>
+                      <p className="text-2xl font-bold text-gray-900">{stockStats.totalProducts}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white rounded-xl shadow-sm border-0">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                      <AlertTriangle className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Stok Habis</p>
+                      <p className="text-2xl font-bold text-gray-900">{stockStats.outOfStock}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-blue-500" />
+              <Card className="bg-white rounded-xl shadow-sm border-0">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                      <TrendingDown className="h-6 w-6 text-yellow-600" />
+                    </div>
                     <div>
-                      <p className="text-xs text-gray-500">Total Produk</p>
-                      <p className="text-lg font-semibold">{stockStats.totalProducts}</p>
+                      <p className="text-sm text-gray-500 mb-1">Stok Rendah</p>
+                      <p className="text-2xl font-bold text-gray-900">{stockStats.lowStock}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                    <div>
-                      <p className="text-xs text-gray-500">Stok Habis</p>
-                      <p className="text-lg font-semibold text-red-600">{stockStats.outOfStock}</p>
+              <Card className="bg-white rounded-xl shadow-sm border-0">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-green-600" />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-4 w-4 text-yellow-500" />
                     <div>
-                      <p className="text-xs text-gray-500">Stok Rendah</p>
-                      <p className="text-lg font-semibold text-yellow-600">{stockStats.lowStock}</p>
+                      <p className="text-sm text-gray-500 mb-1">Nilai Stok</p>
+                      <p className="text-lg font-bold text-gray-900">Rp{stockStats.totalStockValue.toLocaleString()}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white">
-                <CardContent className="p-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Nilai Stok</p>
-                    <p className="text-sm font-semibold">Rp{stockStats.totalStockValue.toLocaleString()}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -298,59 +308,92 @@ export default function Produk() {
           </div>
 
           {/* Product List */}
-          <div className="px-4 space-y-3">
+          <div className="px-4 space-y-3 pb-24">
             {filteredProducts.map((product) => {
               const stockStatus = getStockStatus(product.stok);
               return (
-                <Card key={product.id} className="bg-white">
+                <Card key={product.id} className="bg-white rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      {/* Avatar */}
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-4">
+                      {/* Product Image/Avatar */}
+                      <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span className="text-gray-600 font-semibold text-sm">
-                          {product.avatar}
+                          {product.avatar || product.nama.substring(0, 2).toUpperCase()}
                         </span>
                       </div>
 
                       {/* Product Info */}
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 text-sm mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-base mb-1 truncate">
                           {product.nama}
                         </h3>
-                        <p className="text-gray-900 font-semibold text-sm mb-1">
+                        <p className="text-gray-900 font-bold text-base mb-2">
                           Rp{product.harga.toLocaleString()}
                         </p>
                         <div className="flex items-center gap-2">
                           <Badge 
                             variant="secondary" 
-                            className={`${stockStatus.color} text-white text-xs px-2 py-1`}
+                            className={`${stockStatus.color} text-xs px-3 py-1 rounded-full font-medium`}
                           >
                             {stockStatus.label}
                           </Badge>
-                          <span className="text-xs text-gray-500">Stok: {product.stok}</span>
+                          <span className="text-sm text-gray-500">Stok: {product.stok}</span>
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Action Menu */}
                       {canManageProducts && (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditProduct(product)}
-                            className="p-2"
-                          >
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                          <EditStockModal
-                            product={{
-                              id: product.id,
-                              nama: product.nama,
-                              stok: product.stok
-                            }}
-                            onUpdateStock={handleUpdateStock}
-                          />
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 flex-shrink-0 hover:bg-gray-100 rounded-lg"
+                            >
+                              <MoreVertical className="h-5 w-5 text-gray-600" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => handleEditProduct(product)}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit Produk
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem
+                                  onSelect={(e) => e.preventDefault()}
+                                  className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Hapus Produk
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Hapus Produk</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Apakah Anda yakin ingin menghapus produk "{product.nama}"? 
+                                    Tindakan ini tidak dapat dibatalkan.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteProduct(product.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                    disabled={isDeletingProduct}
+                                  >
+                                    {isDeletingProduct ? "Menghapus..." : "Hapus"}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                   </CardContent>
@@ -360,32 +403,41 @@ export default function Produk() {
           </div>
 
           {/* Floating Add Button */}
-          <div className="fixed bottom-6 right-6">
-            <AddProductModal onAddProduct={handleAddProduct} />
+          <div className="fixed right-4 z-50" style={{ bottom: '100px' }}>
+            <AddProductModal 
+              onAddProduct={handleAddProduct}
+              trigger={
+                <Button 
+                  className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Plus className="h-6 w-6 text-white" />
+                </Button>
+              }
+            />
           </div>
         </>
       ) : (
         /* Category Tab Content */
-        <div className="px-4 py-8">
+        <div className="px-4 py-6 pb-24">
           {categories.length === 0 ? (
-            <div className="text-center">
-              <div className="text-gray-500 mb-4">
-                <Package className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">Belum ada kategori</p>
-                <p className="text-xs text-gray-400 mt-1">
+            <div className="text-center py-12">
+              <div className="text-gray-500 mb-6">
+                <Package className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">Belum ada kategori</p>
+                <p className="text-sm text-gray-400 mt-2">
                   Tambahkan kategori untuk mengorganisir produk Anda
                 </p>
               </div>
               <AddCategoryModal onAddCategory={handleAddCategory} />
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium text-gray-900">Kategori Produk</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-semibold text-gray-900 text-lg">Kategori Produk</h3>
                 <AddCategoryModal 
                   onAddCategory={handleAddCategory}
                   trigger={
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="rounded-xl border-gray-200">
                       <Plus className="h-4 w-4 mr-2" />
                       Tambah
                     </Button>
@@ -394,25 +446,25 @@ export default function Produk() {
               </div>
               
               {categories.map((category) => (
-                <Card key={category.id} className="bg-white">
+                <Card key={category.id} className="bg-white rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <div 
-                        className="w-4 h-4 rounded-full"
+                        className="w-5 h-5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: category.warna }}
                       ></div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 text-base">
                           {category.nama}
                         </h4>
                         {category.deskripsi && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-sm text-gray-500 mt-1">
                             {category.deskripsi}
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm text-gray-500 font-medium">
                           {products.filter(p => p.kategori === category.nama).length} produk
                         </p>
                       </div>
@@ -425,33 +477,30 @@ export default function Produk() {
         </div>
       )}
 
-      {/* Bottom Navigation Spacer */}
-      <div className="h-20"></div>
-
       {/* Filter Modal */}
       {showFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Filter Produk</h2>
               <button 
                 onClick={() => setShowFilterModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 p-1"
               >
                 ✕
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Category Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Kategori
                 </label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                 >
                   <option value="Semua">Semua Kategori</option>
                   {categories.map((category) => (
@@ -464,13 +513,13 @@ export default function Produk() {
 
               {/* Stock Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Status Stok
                 </label>
                 <select
                   value={stockFilter}
                   onChange={(e) => setStockFilter(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
                 >
                   <option value="Semua">Semua Status</option>
                   <option value="Normal">Stok Normal (lebih dari 10)</option>
@@ -480,17 +529,17 @@ export default function Produk() {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-6">
+            <div className="flex gap-3 mt-8">
               <Button 
                 variant="outline" 
                 onClick={resetFilters}
-                className="flex-1"
+                className="flex-1 rounded-xl border-gray-200"
               >
                 Reset
               </Button>
               <Button 
                 onClick={applyFilters}
-                className="flex-1 bg-red-500 hover:bg-red-600"
+                className="flex-1 bg-red-500 hover:bg-red-600 rounded-xl"
               >
                 Terapkan
               </Button>

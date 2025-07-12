@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development NODE_OPTIONS='--no-deprecation' tsx server/index.ts",
+    "dev:supabase": "node start-with-supabase.js",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "vercel-build": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
@@ -17,7 +18,9 @@
     "db:setup:niagahoster": "node setup-database-niagahoster.js",
     "deploy:niagahoster": "npm run build && echo \"Upload dist/ to your Niagahoster hosting\"",
     "setup:supabase": "node setup-supabase-local.js",
-    "test:connection": "node check-database-connection.js"
+    "test:connection": "node check-database-connection.js",
+    "test:supabase": "node test-supabase-connection.js",
+    "migrate:supabase": "supabase db push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -50,6 +50,12 @@ export const products = pgTable("products", {
   pajak: decimal("pajak", { precision: 5, scale: 2 }).default("0"), // Tax percentage
   diskonMaksimal: decimal("diskon_maksimal", { precision: 5, scale: 2 }).default("0"),
   outletId: integer("outlet_id").references(() => outlets.id),
+  brandId: integer("brand_id").references(() => brands.id),
+  isProdukFavorit: boolean("is_produk_favorit").notNull().default(false),
+  hasVariants: boolean("has_variants").notNull().default(false),
+  primaryImageUrl: text("primary_image_url"),
+  wholesalePrice: decimal("wholesale_price", { precision: 10, scale: 2 }),
+  wholesaleMinQty: integer("wholesale_min_qty").default(1),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -60,6 +66,8 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   nama: text("nama").notNull(),
   deskripsi: text("deskripsi"),
+  warna: text("warna").default("#ef4444"),
+  sort_order: integer("sort_order").default(0),
   isActive: boolean("is_active").notNull().default(true),
 });
 
@@ -306,6 +314,45 @@ export type InsertBackupLog = z.infer<typeof insertBackupLogSchema>;
 export type PrinterSetting = typeof printerSettings.$inferSelect;
 export type InsertPrinterSetting = z.infer<typeof insertPrinterSettingSchema>;
 
+// Brands table
+export const brands = pgTable("brands", {
+  id: serial("id").primaryKey(),
+  nama: text("nama").notNull(),
+  deskripsi: text("deskripsi"),
+  logo: text("logo"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Product variants table
+export const productVariants = pgTable("product_variants", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  nama: text("nama").notNull(),
+  harga: decimal("harga", { precision: 10, scale: 2 }).notNull(),
+  hargaBeli: decimal("harga_beli", { precision: 10, scale: 2 }),
+  stok: integer("stok").notNull().default(0),
+  stokMinimal: integer("stok_minimal").notNull().default(5),
+  barcode: text("barcode").unique(),
+  sku: text("sku").unique(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Product images table
+export const productImages = pgTable("product_images", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  imageName: text("image_name"),
+  imageSize: integer("image_size"),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Additional types for complex operations
 export type TransactionWithItems = Transaction & {
   items: TransactionItem[];
@@ -326,4 +373,20 @@ export type DashboardStatsType = {
   pertumbuhanTransaksi: number;
   pertumbuhanProduk: number;
   pertumbuhanPelanggan: number;
+};
+
+// New types for enhanced features
+export type Brand = typeof brands.$inferSelect;
+export type InsertBrand = typeof brands.$inferInsert;
+
+export type ProductVariant = typeof productVariants.$inferSelect;
+export type InsertProductVariant = typeof productVariants.$inferInsert;
+
+export type ProductImage = typeof productImages.$inferSelect;
+export type InsertProductImage = typeof productImages.$inferInsert;
+
+export type ProductWithVariants = Product & {
+  variants?: ProductVariant[];
+  images?: ProductImage[];
+  brand?: Brand;
 };

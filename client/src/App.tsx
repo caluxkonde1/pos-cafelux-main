@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Analytics } from '@vercel/analytics/react';
 import Dashboard from "@/pages/dashboard";
 import Penjualan from "@/pages/penjualan";
 import Produk from "@/pages/produk";
@@ -25,6 +26,13 @@ import EnhancedSidebar from "@/components/enhanced-sidebar";
 import Header from "@/components/header";
 import NotFound from "@/pages/not-found";
 
+// Import enhanced/complete pages
+import TambahProdukFinalFixed from "@/pages/tambah-produk-final-fixed";
+import PelangganComplete from "@/pages/pelanggan-complete";
+import PegawaiComplete from "@/pages/pegawai-complete";
+import RiwayatTransaksiClean from "@/pages/riwayat-transaksi-clean";
+import RekapKasFixed from "@/pages/rekap-kas-fixed";
+
 function Router() {
   return (
     <div className="flex min-h-screen bg-qasir-bg">
@@ -37,17 +45,18 @@ function Router() {
             <Route path="/menunggu-pembayaran" component={MenungguPembayaran} />
             <Route path="/absensi" component={Absensi} />
             <Route path="/penjualan" component={Penjualan} />
-            <Route path="/riwayat-transaksi" component={RiwayatTransaksi} />
-            <Route path="/rekap-kas" component={RekapKas} />
+            <Route path="/riwayat-transaksi" component={RiwayatTransaksiClean} />
+            <Route path="/rekap-kas" component={RekapKasFixed} />
             <Route path="/pengingat" component={Pengingat} />
             <Route path="/produk" component={Produk} />
             <Route path="/kelola-produk" component={KelolaProduk} />
+            <Route path="/tambah-produk" component={TambahProdukFinalFixed} />
             <Route path="/atur-stok" component={AturStok} />
             <Route path="/stok" component={Stok} />
             <Route path="/diskon" component={Diskon} />
             <Route path="/laporan" component={Laporan} />
-            <Route path="/pelanggan" component={Pelanggan} />
-            <Route path="/pegawai" component={Pegawai} />
+            <Route path="/pelanggan" component={PelangganComplete} />
+            <Route path="/pegawai" component={PegawaiComplete} />
             <Route path="/inventaris" component={Inventaris} />
             <Route path="/pengaturan-meja" component={PengaturanMeja} />
             <Route path="/berlangganan" component={Berlangganan} />
@@ -65,6 +74,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   );

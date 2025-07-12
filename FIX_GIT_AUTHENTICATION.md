@@ -2,7 +2,8 @@
 
 ## ❌ Error yang Terjadi
 ```
-Authentication failed for 'https://github.com/caluxkonde1/pos-cafelux-main.git/'
+Authentication failed for 'gitgit push
+'
 ```
 
 ## 🔍 Penyebab Masalah

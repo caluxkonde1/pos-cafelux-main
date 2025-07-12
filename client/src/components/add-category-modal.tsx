@@ -23,25 +23,16 @@ export function AddCategoryModal({ onAddCategory, trigger }: AddCategoryModalPro
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nama: formData.nama,
-          deskripsi: formData.deskripsi,
-          warna: formData.warna,
-        }),
+      // Call the parent's onAddCategory function with the form data
+      // The parent will handle the API call and cache management
+      await onAddCategory({
+        nama: formData.nama,
+        deskripsi: formData.deskripsi,
+        warna: formData.warna,
+        is_active: true
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Gagal menambahkan kategori');
-      }
-
-      const newCategory = await response.json();
-      onAddCategory(newCategory);
+      
+      // Close modal and reset form on success
       setOpen(false);
       setFormData({
         nama: "",
@@ -49,7 +40,9 @@ export function AddCategoryModal({ onAddCategory, trigger }: AddCategoryModalPro
         warna: "#ef4444",
       });
     } catch (error: any) {
-      alert(error.message || 'Gagal menambahkan kategori');
+      console.error('Add category error:', error);
+      // You can add toast notification here
+      alert(`Error: ${error.message}`);
     }
   };
 
